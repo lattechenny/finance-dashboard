@@ -58,29 +58,51 @@ if missing:
 df_norm = (df / df.iloc[0] - 1) * 100
 
 fig = go.Figure()
-colors = {"ETN": "#00C4FF", "NVDA": "#76B900", "SPY": "#FF6B35"}
+colors = {"ETN": "#00D8FF", "NVDA": "#90EE00", "SPY": "#FF4500"}
 
 for ticker in df.columns:
+    series = df_norm[ticker].dropna()
+    last_x = series.index[-1]
+    last_y = series.iloc[-1]
+
     fig.add_trace(go.Scatter(
-        x=df_norm.index,
-        y=df_norm[ticker],
+        x=series.index,
+        y=series,
         name=ticker,
-        line=dict(color=colors[ticker], width=2),
-        hovertemplate=f"<b>{ticker}</b><br>日期: %{{x|%Y-%m-%d}}<br>涨跌: %{{y:.2f}}%<extra></extra>"
+        line=dict(color=colors[ticker], width=3),
+        hovertemplate=f"<b style='color:{colors[ticker]}'>{ticker}</b>  %{{y:+.2f}}%<extra></extra>",
     ))
+
+    # 线尾标注
+    fig.add_annotation(
+        x=last_x,
+        y=last_y,
+        text=f"<b>{ticker}</b>",
+        showarrow=False,
+        xanchor="left",
+        xshift=8,
+        font=dict(color=colors[ticker], size=13),
+    )
 
 fig.update_layout(
     title=f"过去一年涨跌幅对比（基准: {start.strftime('%Y-%m-%d')}）",
     xaxis_title="日期",
     yaxis_title="涨跌幅 (%)",
     hovermode="x unified",
-    legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
-    height=500,
+    hoverlabel=dict(bgcolor="#1e1e2e", font_size=13, font_color="white"),
+    legend=dict(
+        orientation="h",
+        yanchor="bottom", y=1.02,
+        xanchor="right", x=1,
+        font=dict(color="white"),
+    ),
+    height=520,
     plot_bgcolor="#0e1117",
     paper_bgcolor="#0e1117",
     font=dict(color="white"),
-    xaxis=dict(gridcolor="#2a2a2a"),
+    xaxis=dict(gridcolor="#2a2a2a", range=[df_norm.index[0], df_norm.index[-1] + pd.Timedelta(days=18)]),
     yaxis=dict(gridcolor="#2a2a2a", ticksuffix="%"),
+    margin=dict(r=80),
 )
 
 st.plotly_chart(fig, use_container_width=True)
